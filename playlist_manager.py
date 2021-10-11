@@ -92,8 +92,66 @@ def print_results(playlists):
 
 
 def selection():
-    print("Voer 1 in om een nummer te checken")
-    print("Voer 2 in om een nummer toe te voegen aan afspeellijsten")
+    print("Voer 1 in om een nummer handmatig te checken")
+    print("Voer 2 in om het nummer dat je afspeelt te checken")
+    print("Voer 3 in om een nummer toe te voegen aan afspeellijsten")
+
+
+
+def option1(song_index, playlist_index):
+    new_input = input("Enter new song URL: ")
+    song_id = new_input[31:53]
+    print()
+    print(song_index[song_id]['name'], song_index[song_id]['artist(s)'])
+    result = search_song(song_index, song_id, playlist_index)
+    print_results(result)
+    print("\n\t----------------")
+
+
+def option2(song_index_list, playlist_index, sp):
+    try:
+        cur_playing = sp.current_user_playing_track()
+        result = search_song(song_index_list, cur_playing['item']['id'], playlist_index)
+        print_results(result)
+    except:
+        print("You are not currently playing a song.")
+
+    
+
+def option3(song_index_list, playlist_index, own_playlists, sp):
+    print("functieieiieieieieiieieieieieiei")
+    new_input = input("Geef de url van het nummer dat je wil toevoegen: ")
+    song_id = new_input[31:53]
+    print()
+    try:
+        print(song_index_list[song_id]['name'], song_index_list[song_id]['artist(s)'])
+        result = search_song(song_index_list, song_id, playlist_index)
+        print_results(result)
+    except KeyError:
+        print('Dit nummer zit niet in één van je afspeellijsten')
+        return -1
+
+    # Print alle afspeellijsten uit met index 
+    for playlist in own_playlists:
+        if result:
+            if playlist[0] in result:
+                print(playlist[2], "-", playlist[0], "\t[zit het nummer al in]")
+            else:
+                print(playlist[2], "-", playlist[0])
+        else:
+            print(playlist[2], "-", playlist[0])
+    
+    # Vraag om indexen van afspeellijsten
+    to_add = input("Geef de nummers van afspeellijsten: ")
+
+    for playlist in own_playlists:
+        if str(playlist[2]) in to_add.split():
+            #print(playlist[1], song_id)
+            sp.user_playlist_add_tracks("Taede Meijer", playlist[1], [song_id])
+
+            # Update the song_index_list with the new playlist
+            song_index_list[song_id]['playlists'].add(playlist[1])
+            print("Adding song '%s' to playlist: %s" % (song_index_list[song_id]['name'], playlist[0]))
 
 
 def main():
@@ -115,7 +173,7 @@ def main():
         playlist_index[playlist[1]] = playlist[0]
         song_index_list = make_song_index(playlist[1], song_index_list, sp)
 
-    # Look what song the user is currently playing. This will be used as input
+    # Look what song the user is currently playing. This will be used as first input
     try:
         cur_playing = sp.current_user_playing_track()
     except:
@@ -140,45 +198,11 @@ def main():
     for line in sys.stdin:
         line = line.rstrip()
         if line == "1":
-            new_input = input("Enter new song URL: ")
-            song_id = new_input[31:53]
-            print()
-            print(song_index_list[song_id]['name'], song_index_list[song_id]['artist(s)'])
-            result = search_song(song_index_list, song_id, playlist_index)
-            print_results(result)
-            print("\n\t----------------")
-        if line == "2":
-            new_input = input("Geef de url van het nummer dat je wil toevoegen: ")
-            song_id = new_input[31:53]
-            print()
-            try:
-                print(song_index_list[song_id]['name'], song_index_list[song_id]['artist(s)'])
-                result = search_song(song_index_list, song_id, playlist_index)
-                print_results(result)
-            except KeyError:
-                print('Dit nummer zit niet in één van je afspeellijsten')
-
-            # Print alle afspeellijsten uit met index 
-            for playlist in own_playlists:
-                if result:
-                    if playlist[0] in result:
-                        print(playlist[2], "-", playlist[0], "\t[zit het nummer al in]")
-                    else:
-                        print(playlist[2], "-", playlist[0])
-                else:
-                    print(playlist[2], "-", playlist[0])
-            
-            # Vraag om indexen van afspeellijsten
-            to_add = input("Geef de nummers van afspeellijsten: ")
-
-            for playlist in own_playlists:
-                if str(playlist[2]) in to_add.split():
-                    #print(playlist[1], song_id)
-                    sp.user_playlist_add_tracks("Taede Meijer", playlist[1], [song_id])
-
-                    # Update the song_index_list with the new playlist
-                    song_index_list[song_id]['playlists'].add(playlist[1])
-                    print("Adding song '%s' to playlist: %s" % (song_index_list[song_id]['name'], playlist[0]))
+            option1(song_index_list, playlist_index)
+        if line =="2":
+            option2(song_index_list, playlist_index, sp)
+        if line == "3":
+            option3(song_index_list, playlist_index, own_playlists, sp)
 
         print()
         selection()
@@ -186,4 +210,3 @@ def main():
 # https://open.spotify.com/track/5hM5arv9KDbCHS0k9uqwjr?si=30b55314cc424508
 if __name__ == "__main__":
     main()
-
